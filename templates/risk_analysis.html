@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Upload & Analyze</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            $('#selected_risks').select2({
+                placeholder: "Select one or more risks",
+                width: '100%'
+            });
+        });
+        function handleDetailedAnalyze(index, riskName) {
+            ensureAccordionExpanded(index);
+
+            const container = document.getElementById("detailed-analysis-" + index);
+            const initialSection = document.getElementById("initial-analysis-" + index);
+
+            if (!container) return;
+
+            if (container.dataset.loaded === "true") {
+                container.classList.remove("d-none");
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="text-center text-muted">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-2">Doing detailed analysis with AI</p>
+                </div>
+            `;
+            container.classList.remove("d-none");
+
+            fetch("/detailed_analysis", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: new URLSearchParams({
+                    risk_name: riskName,
+                    text: document.querySelector("textarea[name='text']").value
+                })
+            })
+            .then(response => response.text())
+            .then(html => {
+                container.innerHTML = html;
+                container.dataset.loaded = "true";
+                syncCollapseUI(index);
+            })
+            .catch(error => {
+                container.innerHTML = `<div class="text-danger">Error loading analysis.</div>`;
+                console.error("Detailed analysis error:", error);
+            });
+        }
+
+
+    function showInitialAnalysis(index) {
+        ensureAccordionExpanded(index);
+
+        const initialSection = document.getElementById("initial-analysis-" + index);
+        if (initialSection) {
+            initialSection.classList.remove("d-none");
+        }
+    }
+
+
+
+function collapseSection(index) {
+    const element = document.getElementById("collapse" + index);
+    const bsCollapse = bootstrap.Collapse.getOrCreateInstance(element);
+    bsCollapse.hide();
+}
+
+function expandSection(index) {
+    ensureAccordionExpanded(index);
+}
+
+
+function ensureAccordionExpanded(index) {
+    const element = document.getElementById("collapse" + index);
+    const bsCollapse = bootstrap.Collapse.getOrCreateInstance(element);
+    bsCollapse.show();
+}
+
+
+
+function syncCollapseUI(index) {
+    const collapseElement = document.getElementById("collapse" + index);
+    const expandContainer = document.getElementById("expand-container-" + index);
+    const collapseBtn = document.getElementById("collapse-btn-" + index);
+
+    if (collapseElement.classList.contains("show")) {
+        expandContainer.classList.add("d-none");
+        collapseBtn.classList.remove("d-none");
+    } else {
+        expandContainer.classList.remove("d-none");
+        collapseBtn.classList.add("d-none");
+    }
+}
+
+
+    </script>
+    <style>
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            background: linear-gradient(to bottom, #0b0f17, #0d141b);
+            overflow-x: hidden;
+            font-family: 'Inter', sans-serif;
+        }
+
+        #particles-js {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            /* top: 0;
+            left: 0; */
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f5f9fc;
+        } */
+
+        .card {
+            border-radius: 1rem;
+            border: none;
+        }
+
+        .btn-idb, .btn-outline-idb {
+            border-radius: 30px;
+            font-weight: 600;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .btn-outline-idb {
+            color: #1e4e74;
+            border: 2px solid #1e4e74;
+            background-color: transparent;
+        }
+
+        .btn-outline-idb:hover {
+            background-color: #1e4e74;
+            color: white;
+        }
+
+        .btn-idb {
+            background-color: #1e4e74 !important;
+            color: white !important;
+            border: none !important;
+        }
+
+        .btn-idb:hover {
+            background-color: #163c5c !important;
+        }
+
+        .accordion-item {
+            border-left: 5px solid #1e4e74;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .accordion-collapse {
+            border: 2px solid #1e4e74;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+        }
+
+        .accordion-header .fw-bold {
+            font-size: 1.1rem;
+            color: #1e4e74;
+        }
+
+        .bg-idb-light {
+            background: linear-gradient(90deg, #e9f1f7 0%, #dbeaf4 100%);
+        }
+
+        .shadow-sm {
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.08) !important;
+        }
+
+        .spinner-border {
+            width: 2.5rem;
+            height: 2.5rem;
+        }
+
+        .accordion-button:focus {
+            box-shadow: none;
+        }
+
+        textarea.form-control {
+            border: 2px solid #1e4e74;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            background-color: #ffffff;
+        }
+
+        .overlay-background {
+            background: rgba(0, 0, 0, 0.5);
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+        }
+
+        .overlay-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+
+        .alert-secondary {
+            border-left: 4px solid #1e4e74;
+            background-color: #f0f6fa;
+            border-radius: 6px;
+        }
+
+        .btn-outline-secondary {
+            border-radius: 30px;
+            padding: 0.25rem 1.25rem;
+        }
+
+        .alert-info {
+            font-size: 0.95rem;
+        }
+
+        .form-control:focus {
+            border-color: #1e4e74;
+            box-shadow: 0 0 0 0.2rem rgba(30, 78, 116, 0.25);
+        }
+
+        h2, h4 {
+            font-weight: 700;
+        }
+
+        h2 img {
+            filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.1));
+        }
+
+        .section-title {
+            color: #1e4e74;
+            font-size: 1.35rem;
+            font-weight: 700;
+            border-left: 6px solid #1e4e74;
+            padding-left: 12px;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to bottom, #0b0f17, #0d141b);
+            z-index: -2;
+        }
+
+        /* Tooltip with solid white background and black text */
+        .tooltip.tooltip-dark-text .tooltip-inner {
+            color: #000 !important;
+            background-color: #ffffff !important;
+            border: 1px solid #000 !important;
+            font-size: 13px;
+            padding: 6px 10px;
+            border-radius: 6px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        /* Tooltip arrow with solid border */
+        .tooltip.tooltip-dark-text.bs-tooltip-top .tooltip-arrow::before,
+        .tooltip.tooltip-dark-text.bs-tooltip-bottom .tooltip-arrow::before,
+        .tooltip.tooltip-dark-text.bs-tooltip-start .tooltip-arrow::before,
+        .tooltip.tooltip-dark-text.bs-tooltip-end .tooltip-arrow::before {
+            border-color: #000 !important;
+        }
+
+        .feedback-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1030;
+            background-color: #00aaff;
+            color: #0d141b;
+            border: none;
+            padding: 14px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 36px;
+            box-shadow: 0 0 14px rgba(0, 170, 255, 0.6);
+            transition: all 0.3s ease-in-out;
+            }
+            .feedback-btn:hover {
+            background-color: #ffffff;
+            color: #00aaff;
+            box-shadow: 0 0 28px rgba(0, 170, 255, 1);
+            }
+
+
+
+
+
+
+
+    </style>
+
+</head>
+<body>
+<!-- Back to Home Button (Slightly Rounded Square) -->
+<a href="/" class="position-fixed text-decoration-none"
+   data-bs-toggle="tooltip" data-bs-placement="right" title="Back to home page"
+   style="top: 20px; left: 20px; z-index: 1030;
+          background-color: rgba(255, 255, 255, 0.08);
+          color: #ffffff;
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          padding: 6px 14px;
+          font-size: 14px;
+          border-radius: 6px;
+          backdrop-filter: blur(4px);
+          transition: background-color 0.2s ease;">
+    ⬅️ Home
+</a>
+
+
+
+<div id="particles-js"></div>
+
+<!-- Feedback Button (top-right corner) -->
+<button class="feedback-btn" data-bs-toggle="tooltip" data-bs-placement="top" title="Share your thoughts!">
+  💬 Feedback
+  </button>
+  <div id="feedback-panel" class="card p-3" style="display: none; position: fixed; top: 70px; right: 20px; width: 300px; z-index: 11; background-color: #ffffff; color: #000000; border-radius: 10px; box-shadow: 0 0 15px rgba(0, 170, 255, 0.6);">
+    <textarea id="feedback-text" class="form-control mb-2" placeholder="Enter your feedback here..." rows="4"></textarea>
+    <button class="btn btn-primary w-100" onclick="submitFeedback()">Submit</button>
+</div>
+
+
+<div class="container mt-5">
+    <div class="card shadow p-4">
+        <h2 class="mb-4 d-flex align-items-center" style="color: #1e4e74;">
+            <img src="{{ url_for('static', filename='assets/IDB-Logo-with-full-name-Transparent.png') }}" alt="IDB Logo" style="height: 40px;" class="me-3">
+            AUG Risk Analysis System
+        </h2>
+
+
+
+        {% if not text %}
+        <!-- Upload form -->
+        <hr>
+        <h4 class="section-title"><i class="fas fa-upload me-2"></i>Upload a File</h4>
+        <form method="post" enctype="multipart/form-data">
+            <input type="hidden" name="action" value="upload">
+            <div class="mb-3">
+                <input type="file" name="file" class="form-control" accept=".pdf,.txt,.docx" required>
+            </div>
+            <button type="submit" class="btn" style="background-color: #1e4e74; color: white; border: none;"> Upload </button>
+
+        </form>
+        {% endif %}
+
+
+        {% if text %}
+        <hr>
+        <h4 class="section-title"><i class="fas fa-file-alt me-2"></i>Extracted Text</h4>
+
+        <!-- Full document analysis -->
+        <input type="hidden" name="action" value="analyze">
+        <textarea name="text" class="form-control mt-2 mb-3" rows="15" readonly>{{ text }}</textarea>
+        
+        <div id="loading-message" class="alert alert-info d-none" role="alert">
+            ⏳ Please wait... AI is analyzing the document.
+        </div>
+
+        {% if not risk_lis %}
+        <div class="d-flex justify-content-between align-items-center">
+            <!-- Analyze Form -->
+            <form method="post" id="analyze-form" class="mb-0">
+                <input type="hidden" name="action" value="analyze">
+                <input type="hidden" name="text" value="{{ text }}">
+                <button type="submit" class="btn btn-idb" id="analyze-btn">🔍Identify Risks </button>
+            </form>
+
+            <!-- Restart Form (completely separate) -->
+            <form method="post" class="ms-2 mb-0">
+                <input type="hidden" name="action" value="reset">
+                <button type="submit" class="btn btn-idb">🔄 Restart</button>
+            </form>
+        </div>
+        {% endif %}
+        
+        {% if risk_lis%}
+        <hr>
+        <h4 class="section-title"><i class="fas fa-shield-alt me-2"></i>Identified Risks</h4>
+
+        <div class="accordion" id="riskAnalysisAccordion">
+        {% for risk, result in risk_analysis_pairs %}
+        <div class="accordion-item border rounded bg-white shadow-sm my-3">
+            <!-- Header: Risk name + buttons -->
+            <div class="accordion-header px-3 py-2 bg-idb-light border-bottom" id="heading{{ loop.index }}">
+                <div class="d-flex justify-content-between align-items-center w-100 flex-wrap">
+
+                    <!-- Left side: Risk name + question mark -->
+                    <div class="fw-bold text-dark">
+                        {{ risk.name }}
+                        <span class="ms-2" data-bs-toggle="tooltip" title="Click Initial Analyze to expand the analysis.">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="red" class="bi bi-question-circle" viewBox="0 0 16 16">
+                                <path d="..." />
+                                <path d="..." />
+                            </svg>
+                        </span>
+                    </div>
+
+                    <!-- Right side: Button group -->
+                    <div class="d-flex align-items-center gap-2">
+                        <!-- Initial Analyze -->
+                        <button class="btn btn-outline-idb btn-sm"
+                                type="button"
+                                onclick="showInitialAnalysis('{{ loop.index }}')">
+                            Initial Analysis
+                            <span class="ms-1" data-bs-toggle="tooltip" title="Show the initial analysis report for this risk.">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-info-circle" viewBox="0 0 16 16">
+                                    <path d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zM8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0z"/>
+                                    <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 .876-.252 1.003-.598l.088-.416c.066-.3.04-.431-.225-.493l-.451-.084.082-.381 2.29-.287.082-.38-.45-.083a.513.513 0 0 1-.288-.469l.738-3.468c.194-.897-.105-1.319-.808-1.319-.545 0-.876.252-1.003.598l-.088.416c-.066.3-.04.431.225.493l.451.084-.082.381z"/>
+                                    <circle cx="8" cy="4.5" r="1"/>
+                                </svg>
+                            </span>
+                        </button>
+
+                        <!-- Detailed Analyze -->
+                        <form method="post" action="/detailed_analysis" target="_blank" class="mb-0">
+                            <input type="hidden" name="risk_name" value="{{ risk.name }}">
+                            <input type="hidden" name="text" value="{{ text }}">
+                            <div class="d-inline-block position-relative">
+                                <button type="button" class="btn btn-outline-idb btn-sm"
+                                        onclick="handleDetailedAnalyze('{{ loop.index }}', `{{ risk.name }}`)">
+                                    Detailed Analysis
+                                    <span class="ms-1" data-bs-toggle="tooltip" title="Conduct a deeper and more comprehensive analysis, and provide analysis of Key Risk Indicators (KRIs) and suggested Internal Controls.">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-info-circle" viewBox="0 0 16 16">
+                                            <path d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zM8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0z"/>
+                                            <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 .876-.252 1.003-.598l.088-.416c.066-.3.04-.431-.225-.493l-.451-.084.082-.381 2.29-.287.082-.38-.45-.083a.513.513 0 0 1-.288-.469l.738-3.468c.194-.897-.105-1.319-.808-1.319-.545 0-.876.252-1.003.598l-.088.416c-.066.3-.04.431.225.493l.451.084-.082.381z"/>
+                                            <circle cx="8" cy="4.5" r="1"/>
+                                        </svg>
+                                    </span>
+                                </button>
+
+                                <span data-bs-toggle="tooltip" title="This analysis builds on the illustrative material specific to this risk..."
+                                    style="position: absolute; top: -4px; right: -20px;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="red" class="bi bi-question-circle" viewBox="0 0 16 16">
+                                        <path d="..." />
+                                        <path d="..." />
+                                    </svg>
+                                </span>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Collapsible analysis section -->
+            <div id="collapse{{ loop.index }}" class="accordion-collapse collapse" aria-labelledby="heading{{ loop.index }}">
+                <div class="p-3 border-top">
+                    <div id="initial-analysis-{{ loop.index }}" class="d-none">
+                        {{ result | safe }}
+                    </div>
+
+                    <div id="detailed-analysis-{{ loop.index }}" class="mt-3 d-none"></div>
+
+                    <div class="d-flex justify-content-end mt-3">
+                        <button class="btn btn-sm btn-outline-idb toggle-collapse-btn"
+                                onclick="collapseSection('{{ loop.index }}')"
+                                id="collapse-btn-{{ loop.index }}">
+                            🔼 Collapse
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Expand prompt when collapsed -->
+            <div id="expand-container-{{ loop.index }}"
+                class="alert alert-secondary d-flex justify-content-between align-items-center d-none"
+                role="alert"
+                style="padding: 2px 8px; font-size: 0.8rem; line-height: 1; margin: 4px 0;">
+                <div class="text-muted">This section is collapsed.</div>
+                <button class="btn btn-sm btn-outline-idb"
+                        onclick="expandSection('{{ loop.index }}')"
+                        id="expand-btn-{{ loop.index }}">
+                    🔽 Expand
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+
+        </div>
+
+        {% endif %}
+
+        
+        {% endif %}
+
+        <!-- Selected risk analysis result -->
+        {% if analysis_dict %}
+        <hr>
+        {% set total_pages = selected_names | length %}
+        {% set current_risk = selected_names[current_page] %}
+        <h4 class="mt-4 text-info">📑 Analysis for: {{ current_risk }}</h4>
+        <div class="mt-2 p-3 border rounded bg-white">
+            {{ analysis_dict[current_risk]|safe }}
+        </div>
+
+        <!-- Page navigation -->
+        <form method="post" class="mt-3 d-flex justify-content-between">
+            <input type="hidden" name="action" value="selected_risk_analysis">
+            <input type="hidden" name="text" value="{{ text }}">
+            <input type="hidden" name="analysis_dict" value='{{ analysis_dict | tojson | safe }}'>
+            {% for name in selected_names %}
+                <input type="hidden" name="selected_risks" value="{{ name }}">
+            {% endfor %}
+
+            <button class="btn btn-outline-secondary" name="page" value="{{ current_page - 1 }}" {% if current_page == 0 %}disabled{% endif %}>
+                ⬅️ Previous
+            </button>
+
+            <span>Page {{ current_page + 1 }} of {{ total_pages }}</span>
+
+            <button class="btn btn-outline-secondary" name="page" value="{{ current_page + 1 }}" {% if current_page + 1 == total_pages %}disabled{% endif %}>
+                Next ➡️
+            </button>
+        </form>
+        {% endif %}
+
+        {% if text and risk_lis %}
+        <div class="d-flex justify-content-end mt-3">
+            <form method="post">
+                <input type="hidden" name="action" value="reset">
+                <button type="submit" class="btn btn-idb">🔄 Restart</button>
+            </form>
+        </div>
+        {% endif %}
+
+    </div>
+    
+
+</div>
+
+<!-- Fullscreen Loading Overlay -->
+<div id="loading-overlay" style="display: none;">
+    <div class="overlay-background"></div>
+    <div class="overlay-content">
+        <div class="spinner-border text-light" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="text-light mt-3 fs-5">⏳ Identifying Risks with AI...</p>
+    </div>
+</div>
+
+<!-- Fullscreen Loading Overlay for Detailed Analysis -->
+<div id="detailed-loading-overlay" style="display: none;">
+    <div class="overlay-background"></div>
+    <div class="overlay-content">
+        <div class="spinner-border text-light" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="text-light mt-3 fs-5">⏳ Doing detailed analysis with AI...</p>
+    </div>
+</div>
+
+<script>
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+    const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const analyzeForm = document.getElementById("analyze-form");
+        const analyzeBtn = document.getElementById("analyze-btn");
+        const loadingOverlay = document.getElementById("loading-overlay");
+
+        if (analyzeForm && analyzeBtn && loadingOverlay) {
+            analyzeForm.addEventListener("submit", function () {
+                loadingOverlay.style.display = "block";
+                analyzeBtn.disabled = true;
+                analyzeBtn.innerHTML = "⏳ Analyzing...";
+            });
+        }
+    });
+    function loadDetailedAnalysis(index, riskName) {
+        const container = document.getElementById("detailed-analysis-" + index);
+
+        if (container.dataset.loaded === "true") {
+            container.classList.toggle("d-none");
+            return;
+        }
+
+        container.innerHTML = `
+            <div class="text-center text-muted">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="mt-2">Doing detailed analysis...</p>
+            </div>
+        `;
+        container.classList.remove("d-none");
+
+        fetch("/detailed_analysis", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: new URLSearchParams({
+                risk_name: riskName,
+                text: document.querySelector("textarea[name='text']").value
+            })
+        })
+        .then(response => response.text())
+        .then(html => {
+            container.innerHTML = html;
+            container.dataset.loaded = "true";
+        })
+        .catch(error => {
+            container.innerHTML = `<div class="text-danger">Error loading analysis.</div>`;
+            console.error("Detailed analysis error:", error);
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+    const accordion = document.getElementById('riskAnalysisAccordion');
+    if (accordion) {
+        accordion.addEventListener('shown.bs.collapse', function (event) {
+            const id = event.target.id.replace("collapse", "");
+            syncCollapseUI(id);
+        });
+
+        accordion.addEventListener('hidden.bs.collapse', function (event) {
+            const id = event.target.id.replace("collapse", "");
+            syncCollapseUI(id);
+        });
+    }
+});
+
+document.querySelector('.feedback-btn').addEventListener('click', function () {
+      const panel = document.getElementById('feedback-panel');
+      panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    });
+
+    function submitFeedback() {
+      const feedback = document.getElementById('feedback-text').value;
+      // const userEmail = msalInstance.getAllAccounts()[0]?.username || "Unknown";
+      const userEmail = "test@user.com";
+
+
+      fetch('/submit_feedback', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          feedback: feedback,
+          user_id: userEmail
+        })
+      })
+      .then(response => {
+        if (response.ok) {
+          alert('Thank you for your feedback!');
+          document.getElementById('feedback-text').value = '';
+        } else {
+          alert('Failed to submit feedback.');
+        }
+      });
+    }
+
+/* ---------- Particles ---------- */
+particlesJS("particles-js", {
+    "particles": {
+        "number": { "value": 75 },
+        "color": { "value": "#00aaff" },
+        "shape": { "type": "circle" },
+        "opacity": { "value": 0.4 },
+        "size": { "value": 3 },
+        "line_linked": {
+            "enable": true,
+            "distance": 130,
+            "color": "#00aaff",
+            "opacity": 0.4,
+            "width": 1
+        },
+        "move": {
+            "enable": true,
+            "speed": 2.8,
+            "direction": "none",
+            "out_mode": "out"
+        }
+    },
+    "interactivity": {
+        "events": {
+            "onhover": { "enable": true, "mode": "repulse" },
+            "onclick": { "enable": true, "mode": "push" }
+        },
+        "modes": {
+            "repulse": { "distance": 100 },
+            "push": { "particles_nb": 4 }
+        }
+    },
+    "retina_detect": true
+});
+
+    
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,12 @@
+Flask
+Werkzeug
+openai
+loguru
+PyPDF2
+python-docx
+pdfminer.six
+azure-identity
+loguru
+docx
+pdfminer.six
+python-dotenv
