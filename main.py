@@ -5,7 +5,7 @@ from OPENAI import call_gpt4o, call_gpt4o_test
 import PyPDF2
 import docx
 import re
-from OPENAI import get_risk_prompt_iteration_0, get_risk_prompt_iteration_1, format_output_with_highlights, analyze_risks,analyze_risks_1
+from OPENAI import get_risk_prompt_iteration_0, get_risk_prompt_iteration_1, format_output_with_highlights, analyze_risks_detailed,analyze_risks_initial
 import json
 from loguru import logger
 import subprocess
@@ -102,7 +102,7 @@ def upload_file():
         elif action == 'analyze':
             if text:
                 prompt = get_risk_prompt_iteration_0(text)
-                analysis_result, risk_lis = analyze_risks(call_gpt4o(prompt))
+                analysis_result, risk_lis = analyze_risks_initial(call_gpt4o(prompt))
                 for i in range(len(analysis_result)):
                     analysis_result[i] = format_output_with_highlights(analysis_result[i], "output5")
                 risk_analysis_pairs = list(zip(risk_lis, analysis_result))
@@ -143,7 +143,7 @@ def detailed_analysis():
             level_1_risk=name.split("-")[1].strip()
         )
         result = call_gpt4o(prompt)
-        temp = analyze_risks_1(result)
+        temp = analyze_risks_detailed(result)
         detailed_result = (
             format_output_with_highlights(temp, "output2") + "<br>" +
             format_output_with_highlights(temp, "output3") +
@@ -202,7 +202,7 @@ def view_feedback():
     return render_template('view_feedback.html', feedback_data=feedback_data)
 
 
-DB_PATH = "Test.db"  # 确保数据库文件放在项目根目录下
+DB_PATH = "Test.db" 
 
 def parse_impact_level(impact_text):
     levels = re.findall(r'\b(High|Medium|Low)\b', impact_text)

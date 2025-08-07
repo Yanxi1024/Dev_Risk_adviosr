@@ -586,7 +586,8 @@ def call_gpt4o(prompt):
     #         azure_ad_token_provider=token_provider
     #     )
     # else:
-    AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY")
+    # AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY")
+    AZURE_OPENAI_API_KEY = "c94b159223564c3081d83b3a18221371"
     client = AzureOpenAI(
         azure_endpoint=AZURE_ENDPOINT,
         api_version=API_VERSION,
@@ -610,7 +611,7 @@ def call_gpt4o(prompt):
 
 
 
-def analyze_risks_1(response):
+def analyze_risks_detailed(response):
     analyses = []
     
     response = response['risk_assessment']
@@ -647,7 +648,7 @@ def analyze_risks_1(response):
   
     return analyses
 
-def analyze_risks(response):
+def analyze_risks_initial(response):
     analyses = []; risk_lis = []
     if not isinstance(response, list):
         # If response is not a list, it might be the entire response dictionary
