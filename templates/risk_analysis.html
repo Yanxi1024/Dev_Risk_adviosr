@@ -317,12 +317,6 @@ function syncCollapseUI(index) {
             box-shadow: 0 0 28px rgba(0, 170, 255, 1);
             }
 
-
-
-
-
-
-
     </style>
 
 </head>
@@ -423,12 +417,6 @@ function syncCollapseUI(index) {
                     <!-- Left side: Risk name + question mark -->
                     <div class="fw-bold text-dark">
                         {{ risk.name }}
-                        <span class="ms-2" data-bs-toggle="tooltip" title="Click Initial Analyze to expand the analysis.">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="red" class="bi bi-question-circle" viewBox="0 0 16 16">
-                                <path d="..." />
-                                <path d="..." />
-                            </svg>
-                        </span>
                     </div>
 
                     <!-- Right side: Button group -->
@@ -463,14 +451,7 @@ function syncCollapseUI(index) {
                                         </svg>
                                     </span>
                                 </button>
-
-                                <span data-bs-toggle="tooltip" title="This analysis builds on the illustrative material specific to this risk..."
-                                    style="position: absolute; top: -4px; right: -20px;">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="red" class="bi bi-question-circle" viewBox="0 0 16 16">
-                                        <path d="..." />
-                                        <path d="..." />
-                                    </svg>
-                                </span>
+                                
                             </div>
                         </form>
                     </div>
@@ -516,37 +497,6 @@ function syncCollapseUI(index) {
         {% endif %}
 
         
-        {% endif %}
-
-        <!-- Selected risk analysis result -->
-        {% if analysis_dict %}
-        <hr>
-        {% set total_pages = selected_names | length %}
-        {% set current_risk = selected_names[current_page] %}
-        <h4 class="mt-4 text-info">📑 Analysis for: {{ current_risk }}</h4>
-        <div class="mt-2 p-3 border rounded bg-white">
-            {{ analysis_dict[current_risk]|safe }}
-        </div>
-
-        <!-- Page navigation -->
-        <form method="post" class="mt-3 d-flex justify-content-between">
-            <input type="hidden" name="action" value="selected_risk_analysis">
-            <input type="hidden" name="text" value="{{ text }}">
-            <input type="hidden" name="analysis_dict" value='{{ analysis_dict | tojson | safe }}'>
-            {% for name in selected_names %}
-                <input type="hidden" name="selected_risks" value="{{ name }}">
-            {% endfor %}
-
-            <button class="btn btn-outline-secondary" name="page" value="{{ current_page - 1 }}" {% if current_page == 0 %}disabled{% endif %}>
-                ⬅️ Previous
-            </button>
-
-            <span>Page {{ current_page + 1 }} of {{ total_pages }}</span>
-
-            <button class="btn btn-outline-secondary" name="page" value="{{ current_page + 1 }}" {% if current_page + 1 == total_pages %}disabled{% endif %}>
-                Next ➡️
-            </button>
-        </form>
         {% endif %}
 
         {% if text and risk_lis %}

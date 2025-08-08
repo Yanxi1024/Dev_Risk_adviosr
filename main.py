@@ -103,8 +103,8 @@ def upload_file():
             if text:
                 prompt = get_risk_prompt_iteration_0(text)
                 analysis_result, risk_lis = analyze_risks_initial(call_gpt4o(prompt))
-                for i in range(len(analysis_result)):
-                    analysis_result[i] = format_output_with_highlights(analysis_result[i], "output5")
+                # for i in range(len(analysis_result)):
+                #     analysis_result[i] = format_output_with_highlights(analysis_result[i], "output5")
                 risk_analysis_pairs = list(zip(risk_lis, analysis_result))
 
         elif action == 'reset':
