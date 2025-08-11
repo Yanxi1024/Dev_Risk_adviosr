@@ -11,8 +11,7 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
-      <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+
     <script>
 
         function syncCollapseUI(index) {
@@ -40,9 +39,6 @@
             overflow-x: hidden;
             font-family: 'Inter', sans-serif;
         }
-        .chart-box { margin-bottom: 40px; }
-    .btn-toggle .btn { min-width: 120px; }
-    .table-container { overflow-x: auto; max-height: 400px; overflow-y: scroll; }
 
         #particles-js {
             position: absolute;
@@ -234,104 +230,115 @@
             box-shadow: 0 0 28px rgba(0, 170, 255, 1);
             }
 
+        .nav-pills .nav-link.active { background-color: #00aaff; color: #0d1117; font-weight: 700; }
+        a, .form-text { color: #a8dfff; }
+        .brand { color: #00aaff; text-shadow: 0 0 10px rgba(0,170,255,.8); }
+        .btn-primary { background-color: #00aaff; border-color: #00aaff; color: #0d1117; font-weight: 700; }
+        .btn-primary:hover { filter: brightness(1.1); }
+        .form-control { background: #0f1722; color: #fff; border-color: #19324a; }
+
+        .logo-container {
+            position: absolute;
+            top: 20px;
+            left: 30px;
+            z-index: 2;
+        }
+
+        .idb-logo {
+            height: 55px;
+        }
+
     </style>
 
 </head>
 <body>
-<!-- Back to Home Button (Slightly Rounded Square) -->
-<a href="/" class="position-fixed text-decoration-none"
-   data-bs-toggle="tooltip" data-bs-placement="right" title="Back to home page"
-   style="top: 20px; left: 20px; z-index: 1030;
-          background-color: rgba(255, 255, 255, 0.08);
-          color: #ffffff;
-          border: 1px solid rgba(255, 255, 255, 0.3);
-          padding: 6px 14px;
-          font-size: 14px;
-          border-radius: 6px;
-          backdrop-filter: blur(4px);
-          transition: background-color 0.2s ease;">
-    ⬅️ Home
-</a>
+
+<div class="logo-container">
+    <img src="./static/assets/AUG EN W.png" alt="IDB Logo" class="idb-logo">
+</div>
+
 
 
 
 <div id="particles-js"></div>
 
-<!-- Login / User Dropdown -->
-<div class="user-menu" style="position:fixed; top:20px; right:20px; z-index:10;">
-  {% if current_user_name %}
-    <div class="dropdown">
-      <button class="btn btn-sm btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
-        {{ current_user_name }}
-      </button>
-      <ul class="dropdown-menu dropdown-menu-end">
-        <li><a class="dropdown-item" href="{{ url_for('switch_account') }}">Switch account</a></li>
-        <li><a class="dropdown-item" href="{{ url_for('logout') }}">Sign out</a></li>
-      </ul>
-    </div>
-  {% else %}
-    <a class="btn btn-outline-light" href="{{ url_for('auth_page') }}">Sign in</a>
-  {% endif %}
-</div>
+<div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-12 col-md-8 col-lg-6">
+        <div class="text-center mb-4">
+          <h1 class="brand">AUG Risk Management System</h1>
+          <p class="text-white">Sign in or create an account</p>
+        </div>
 
-<!-- Feedback Button (top-right corner) -->
-<!-- <button class="feedback-btn" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Share your thoughts!">
-  💬 Feedback
-</button> -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+        {% endwith %}
 
+        <div class="card p-3">
+          <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active" id="pills-login-tab" data-bs-toggle="pill" data-bs-target="#pills-login" type="button" role="tab">Login</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="pills-register-tab" data-bs-toggle="pill" data-bs-target="#pills-register" type="button" role="tab">Register</button>
+            </li>
+          </ul>
+          <div class="tab-content" id="pills-tabContent">
+            <div class="tab-pane fade show active" id="pills-login" role="tabpanel">
+              <form action="{{ url_for('login') }}" method="post" class="needs-validation" novalidate>
+                <div class="mb-3">
+                  <label class="form-label">Email</label>
+                  <input type="email" class="form-control" name="email" required>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Password</label>
+                  <input type="password" class="form-control" name="password" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Sign In</button>
+              </form>
+            </div>
+            <div class="tab-pane fade" id="pills-register" role="tabpanel">
+              <form action="{{ url_for('register') }}" method="post" class="needs-validation" novalidate>
+                <div class="mb-3">
+                  <label class="form-label">Full Name</label>
+                  <input type="text" class="form-control" name="name" required>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Email</label>
+                  <input type="email" class="form-control" name="email" required>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Password</label>
+                  <input type="password" class="form-control" name="password" minlength="6" required>
+                  <div class="form-text">Minimum 6 characters.</div>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Create Account</button>
+              </form>
+            </div>
+          </div>
+        </div>
 
-<div class="container mt-5">
-    <div class="card shadow p-4">
-        <h2 class="mb-4 d-flex align-items-center" style="color: #1e4e74;">
-            <img src="{{ url_for('static', filename='assets/IDB-Logo-with-full-name-Transparent.png') }}" alt="IDB Logo" style="height: 40px;" class="me-3">
-            AUG Risk Overview System
-        </h2>
-    
-
-    <div class="text-center mb-4 btn-toggle">
-      <div class="btn-group" role="group">
-        <button class="btn btn-primary active" id="userBtn">User</button>
-        <button class="btn btn-secondary" id="groupBtn">Group</button>
-        <!-- <button class="btn btn-secondary" id="bothBtn">User + Group</button> -->
+        <div class="text-center mt-3">
+          <a href="{{ url_for('index') }}">← Back to Home</a>
+        </div>
       </div>
     </div>
+  </div>
 
-    <div class="chart-box">
-      <h5 class="text-center">Risk Type Distribution</h5>
-      <div id="riskTypeChart"></div>
-    </div>
+  <input type="hidden" name="next" value="{{ request.args.get('next','') }}">
 
-    <div class="chart-box">
-      <h5 class="text-center">Likelihood vs Impact</h5>
-      <div id="scatterChart"></div>
-    </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    <div class="chart-box">
-      <h5 class="text-center">Risk Records</h5>
-      <input type="text" class="form-control mb-2" id="fileSearch" placeholder="Search file name..." />
-      <div class="table-container">
-        <table class="table table-bordered table-hover" id="riskTable">
-          <thead class="table-light">
-            <tr>
-              <th>File Name</th>
-              <th>Risk Name</th>
-              <th>Likelihood</th>
-              <th>Impact</th>
-              <th>Access Level</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
 
-    <div class="chart-box">
-      <h5 class="text-center">Number of Files per Risk Type</h5>
-      <div id="fileRiskBarChart"></div>
-    </div>
-        
 
-</div></div>
+
 
 
 
@@ -373,111 +380,8 @@ particlesJS("particles-js", {
 });
 
     
-    let allTableData = [];
-    let currentLevel = 'user';
 
-    document.addEventListener("DOMContentLoaded", () => {
-      loadData("user");
-
-      document.getElementById("userBtn").onclick = () => setLevel("user");
-      document.getElementById("groupBtn").onclick = () => setLevel("group");
-      const bothBtn = document.getElementById("bothBtn");
-        if (bothBtn) {
-        bothBtn.onclick = () => setLevel("all");
-        }
-
-
-      document.getElementById("fileSearch").addEventListener("input", filterTable);
-    });
-
-    function setLevel(level) {
-      if (level === currentLevel) return;
-      currentLevel = level;
-
-      document.querySelectorAll(".btn-toggle .btn").forEach(btn => btn.classList.remove("btn-primary", "active"));
-      if (level === "user") userBtn.classList.add("btn-primary", "active");
-      else if (level === "group") groupBtn.classList.add("btn-primary", "active");
-      else bothBtn.classList.add("btn-primary", "active");
-
-      loadData(level === "all" ? "" : level);
-    }
-
-    function loadData(level) {
-      fetch(`/data/${level}`)
-        .then(res => res.json())
-        .then(data => {
-          plotPie(data.risk_types);
-          plotScatter(data.scatter);
-          renderTable(data.table);
-          plotBar(data.file_risk_counts);
-        });
-    }
-
-    function plotPie(data) {
-      Plotly.newPlot("riskTypeChart", [{
-        labels: data.labels,
-        values: data.counts,
-        type: "pie",
-        hole: 0.3
-      }], { margin: { t: 20 } });
-    }
-
-    function plotScatter(data) {
-      Plotly.newPlot("scatterChart", [{
-        x: data.likelihood,
-        y: data.impact,
-        text: data.file_names,
-        mode: "markers",
-        type: "scatter",
-        marker: { size: 10, color: "teal" }
-      }], {
-        xaxis: { title: "Likelihood (1 = Low, 3 = High)" },
-        yaxis: { title: "Avg Impact (1 = Low, 3 = High)" },
-        margin: { t: 20 }
-      });
-    }
-
-    function renderTable(data) {
-      allTableData = data;
-      filterTable();
-    }
-
-    function filterTable() {
-      const keyword = document.getElementById("fileSearch").value.toLowerCase();
-      const tbody = document.querySelector("#riskTable tbody");
-      tbody.innerHTML = "";
-
-      const filtered = allTableData.filter(row =>
-        row.file_name.toLowerCase().includes(keyword)
-      );
-
-      for (const row of filtered) {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${row.file_name}</td>
-          <td>${row.risk_name}</td>
-          <td>${row.likelihood}</td>
-          <td>${row.impact}</td>
-          <td>${row.access_level}</td>
-        `;
-        tbody.appendChild(tr);
-      }
-    }
-
-    function plotBar(data) {
-      Plotly.newPlot("fileRiskBarChart", [{
-        x: data.counts,
-        y: data.labels,
-        type: "bar",
-        orientation: "h",
-        marker: { color: "coral" }
-      }], {
-        margin: { t: 20 },
-        xaxis: { title: "File Count" },
-        yaxis: { automargin: true }
-      });
-    }
-  </script>
+</script>
 
 </body>
 </html>

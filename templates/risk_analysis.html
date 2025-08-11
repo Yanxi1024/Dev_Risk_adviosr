@@ -367,13 +367,45 @@ function syncCollapseUI(index) {
 <div id="particles-js"></div>
 
 <!-- Feedback Button (top-right corner) -->
-<button class="feedback-btn" data-bs-toggle="tooltip" data-bs-placement="top" title="Share your thoughts!">
+<!-- <button class="feedback-btn" data-bs-toggle="tooltip" data-bs-placement="top" title="Share your thoughts!">
   💬 Feedback
   </button>
   <div id="feedback-panel" class="card p-3" style="display: none; position: fixed; top: 70px; right: 20px; width: 300px; z-index: 11; background-color: #ffffff; color: #000000; border-radius: 10px; box-shadow: 0 0 15px rgba(0, 170, 255, 0.6);">
     <textarea id="feedback-text" class="form-control mb-2" placeholder="Enter your feedback here..." rows="4"></textarea>
     <button class="btn btn-primary w-100" onclick="submitFeedback()">Submit</button>
-</div>
+</div> -->
+
+<!-- Login / User Dropdown -->
+<div class="user-menu" style="position:fixed; top:20px; right:20px; z-index:10;">
+<!-- {% if current_user_name %}
+    <div class="dropdown">
+    <button class="btn btn-sm btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+        {{ current_user_name }}
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end">
+        <li><a class="dropdown-item" href="{{ url_for('switch_account') }}">Switch account</a></li>
+        <li><a class="dropdown-item" href="{{ url_for('logout') }}">Sign out</a></li>
+    </ul>
+    </div>
+{% else %}
+    <a class="btn btn-outline-light" href="{{ url_for('auth_page') }}">Sign in</a>
+{% endif %}
+</div> -->
+
+{% if current_user_name %}
+  <div class="dropdown">
+    <button class="btn btn-sm btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+      {{ current_user_name }}
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end">
+      <li><a class="dropdown-item" href="{{ url_for('switch_account', next=request.full_path) }}">Switch account</a></li>
+      <li><a class="dropdown-item" href="{{ url_for('logout', next=request.full_path) }}">Sign out</a></li>
+    </ul>
+  </div>
+{% else %}
+  <a class="btn btn-login" href="{{ url_for('auth_page', next=request.full_path) }}">Sign in</a>
+{% endif %}
+
 
 
 <div class="container mt-5">
@@ -499,13 +531,18 @@ function syncCollapseUI(index) {
                             📄 Export PDF
                         </button>
                         <button class="btn btn-sm btn-outline-idb"
-                                onclick="saveToDatabase('initial-analysis-{{ loop.index }}', '{{ risk.name }}', '{{ filename }}', 'initial', 'personal')">
+                                onclick="saveToDatabase('initial-analysis-{{ loop.index }}', '{{ risk.name }}', '{{ filename }}', 'initial', current_user_email)"
+                                {% if not current_user_email %}disabled data-bs-toggle="tooltip" data-bs-placement="top" title="Please log in at the top right of the page" style="pointer-events: auto;"{% endif %}>
                             💾 Save to Personal
                         </button>
+
                         <button class="btn btn-sm btn-outline-idb"
-                                onclick="saveToDatabase('initial-analysis-{{ loop.index }}', '{{ risk.name }}', '{{ filename }}', 'initial', 'shared')">
+                                onclick="saveToDatabase('initial-analysis-{{ loop.index }}', '{{ risk.name }}', '{{ filename }}', 'initial', 'shared')"
+                                {% if not current_user_email %}disabled data-bs-toggle="tooltip" data-bs-placement="top" title="Please log in at the top right of the page" style="pointer-events: auto;"{% endif %}>
                             🤝 Save to Shared
                         </button>
+
+
 
                     </div>
 

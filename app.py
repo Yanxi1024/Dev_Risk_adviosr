@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash
 import os
 from werkzeug.utils import secure_filename
 from OPENAI import call_gpt4o, call_gpt4o_test
@@ -14,8 +14,10 @@ import io
 import sqlite3
 from datetime import datetime
 import pandas as pd
+from datetime import timedelta
+from urllib.parse import urlparse
 
-from models import db, AnalysisRecord
+from models import db, AnalysisRecord, User
 
 app = Flask(__name__)
 
@@ -27,6 +29,11 @@ ALLOWED_EXTENSIONS = {'txt', 'pdf', 'docx'}
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///Analysis.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-me')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.permanent_session_lifetime = timedelta(days=7)
+
 
 db.init_app(app)
 
@@ -297,6 +304,175 @@ def risk_overview1():
 @app.route("/data/<level>")
 def get_level_data(level):
     return jsonify(get_data(level))
+
+
+# # --- Login ---
+# @app.context_processor
+# def inject_user():
+#     """Make current user name available to all templates as `current_user_name`."""
+#     return {
+#         'current_user_name': session.get('user_name'),
+#         'current_user_email': session.get('user_email')
+#     }
+
+# @app.route('/auth')
+# def auth_page():
+#     return render_template('auth.html')
+
+# @app.post('/register')
+# def register():
+#     name = request.form.get('name', '').strip()
+#     email = request.form.get('email', '').strip().lower()
+#     password = request.form.get('password', '')
+
+#     if not name or not email or not password:
+#         flash('All fields are required.', 'danger')
+#         return redirect(url_for('auth_page'))
+
+#     if User.query.filter_by(email=email).first():
+#         flash('Email is already registered.', 'warning')
+#         return redirect(url_for('auth_page'))
+
+#     u = User(name=name, email=email)
+#     u.set_password(password)
+#     db.session.add(u)
+#     db.session.commit()
+
+#     # Auto-login after registration
+#     session.permanent = True
+#     session['user_id'] = u.id
+#     session['user_name'] = u.name
+#     session['user_email'] = u.email
+
+#     flash('Account created. Welcome!', 'success')
+#     return redirect(url_for('index'))
+
+# @app.post('/login')
+# def login():
+#     email = request.form.get('email', '').strip().lower()
+#     password = request.form.get('password', '')
+
+#     user = User.query.filter_by(email=email).first()
+#     if not user or not user.check_password(password):
+#         flash('Invalid email or password.', 'danger')
+#         return redirect(url_for('auth_page'))
+
+#     session.permanent = True
+#     session['user_id'] = user.id
+#     session['user_name'] = user.name
+#     session['user_email'] = user.email
+
+#     flash('Signed in successfully.', 'success')
+#     return redirect(url_for('index'))
+
+# @app.get('/logout')
+# def logout():
+#     session.clear()
+#     flash('Signed out.', 'info')
+#     return redirect(url_for('index'))
+
+# @app.get('/switch_account')
+# def switch_account():
+#     session.clear()
+#     return redirect(url_for('auth_page'))
+
+ALLOWED_NEXT = {'/risk_analysis'}
+
+@app.context_processor
+def inject_user():
+    """Make current user name available to all templates as `current_user_name`."""
+    return {
+        'current_user_name': session.get('user_name'),
+        'current_user_email': session.get('user_email')
+    }
+
+def _get_safe_next():
+    """从参数/表单里拿 next，并校验只允许回到白名单路径，避免开放重定向。"""
+    next_url = request.args.get('next') or request.form.get('next') or ''
+    if not next_url:
+        return None
+    try:
+        path = urlparse(next_url).path
+    except Exception:
+        return None
+    return next_url if path in ALLOWED_NEXT else None
+
+def _redirect_after_auth(default_endpoint='index'):
+    """登录/注册/登出后的统一跳转逻辑。"""
+    nxt = _get_safe_next()
+    if nxt:
+        return redirect(nxt)
+    return redirect(url_for(default_endpoint))
+
+@app.route('/auth')
+def auth_page():
+    # 模板里会读取 request.args.get('next')，无需后端额外处理
+    return render_template('auth.html')
+
+@app.post('/register')
+def register():
+    name = request.form.get('name', '').strip()
+    email = request.form.get('email', '').strip().lower()
+    password = request.form.get('password', '')
+
+    if not name or not email or not password:
+        flash('All fields are required.', 'danger')
+        return redirect(url_for('auth_page', next=request.form.get('next', '')))
+
+    if User.query.filter_by(email=email).first():
+        flash('Email is already registered.', 'warning')
+        return redirect(url_for('auth_page', next=request.form.get('next', '')))
+
+    u = User(name=name, email=email)
+    u.set_password(password)
+    db.session.add(u)
+    db.session.commit()
+
+    # Auto-login after registration
+    session.permanent = True
+    session['user_id'] = u.id
+    session['user_name'] = u.name
+    session['user_email'] = u.email
+
+    flash('Account created. Welcome!', 'success')
+    return _redirect_after_auth()
+
+@app.post('/login')
+def login():
+    email = request.form.get('email', '').strip().lower()
+    password = request.form.get('password', '')
+
+    user = User.query.filter_by(email=email).first()
+    if not user or not user.check_password(password):
+        flash('Invalid email or password.', 'danger')
+        return redirect(url_for('auth_page', next=request.form.get('next', '')))
+
+    session.permanent = True
+    session['user_id'] = user.id
+    session['user_name'] = user.name
+    session['user_email'] = user.email
+
+    flash('Signed in successfully.', 'success')
+    return _redirect_after_auth()
+
+@app.get('/logout')
+def logout():
+    session.clear()
+    flash('Signed out.', 'info')
+    return _redirect_after_auth()
+
+@app.get('/switch_account')
+def switch_account():
+    # 清会话后跳到 /auth；如果来源是白名单页，则把它作为 next 透传
+    session.clear()
+    ref = request.referrer or ''
+    try:
+        path = urlparse(ref).path
+    except Exception:
+        path = ''
+    if path in ALLOWED_NEXT:
+        return redirect(url_for('auth_page', next=ref))
+    return redirect(url_for('auth_page'))
 
 if __name__ == '__main__':
     host = os.environ.get('AZURE_WEBAPP_HOST', '0.0.0.0')
