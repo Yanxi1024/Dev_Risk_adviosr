@@ -1,3 +1,11 @@
-<div class="p-3 border rounded bg-light">
-    {{ detailed_result | safe }}
+<!-- <div id="detailed-result-container"
+     data-json='{{ detailed_result | tojson | safe }}'
+     class="p-3 border rounded bg-light">
+</div> -->
+
+<div class="section-divider">Detailed Analysis Report</div>
+<div id="detailed-result-container"
+     data-json='{{ detailed_result | tojson | safe }}'>
 </div>
+
+

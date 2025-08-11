@@ -15,6 +15,8 @@ import sqlite3
 from datetime import datetime
 import pandas as pd
 
+from models import db, AnalysisRecord
+
 app = Flask(__name__)
 
 ### For saving logic
@@ -23,6 +25,34 @@ app = Flask(__name__)
 
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'docx'}
 
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///Analysis.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db.init_app(app)
+
+with app.app_context():
+    db.create_all()
+
+@app.route("/save_analysis", methods=["POST"])
+def save_analysis():
+    data = request.get_json()
+
+    if not data:
+        return jsonify({"status": "error", "message": "No data received"}), 400
+
+    try:
+        record = AnalysisRecord(
+            content_json=data["content_json"],
+            analysis_type=data["analysis_type"],
+            ownership=data["ownership"],
+            risk_name=data["risk_name"],
+            filename=data["filename"]
+        )
+        db.session.add(record)
+        db.session.commit()
+        return jsonify({"status": "success"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -71,6 +101,7 @@ def index():
 @app.route('/risk_analysis', methods=['GET', 'POST'])
 def upload_file():
     text = ''
+    filename = ''
     analysis_result = []
     risk_lis = []
     risk_analysis_pairs = []
@@ -96,11 +127,12 @@ def upload_file():
                 # filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                 # file.save(filepath)
                 # text = extract_text(filepath)
+                filename = file.filename
                 text = extract_text(file)
-
 
         elif action == 'analyze':
             if text:
+                filename = request.form.get('filename', '')
                 prompt = get_risk_prompt_iteration_0(text)
                 analysis_result, risk_lis = analyze_risks_initial(call_gpt4o(prompt))
                 # for i in range(len(analysis_result)):
@@ -109,6 +141,7 @@ def upload_file():
 
         elif action == 'reset':
             text = ''
+            filename = ''
             analysis_result = []
             risk_lis = []
             risk_analysis_pairs = []
@@ -125,7 +158,8 @@ def upload_file():
         selected_names=selected_names,
         risk_analysis_pairs=risk_analysis_pairs,
         analysis_dict=analysis_dict,
-        current_page=page
+        current_page=page,
+        filename=filename
     )
 
 @app.route('/detailed_analysis', methods=['POST'])
@@ -143,17 +177,12 @@ def detailed_analysis():
             level_1_risk=name.split("-")[1].strip()
         )
         result = call_gpt4o(prompt)
-        temp = analyze_risks_detailed(result)
-        detailed_result = (
-            format_output_with_highlights(temp, "output2") + "<br>" +
-            format_output_with_highlights(temp, "output3") +
-            format_output_with_highlights(temp, "output4")
-        )
+        detailed_result = analyze_risks_detailed(result)
+
     except Exception as e:
         logger.exception("Error during detailed analysis")
         return "Error during analysis", 500
 
-    # return render_template("detailed_analysis.html", risk_name=name, detailed_result=detailed_result)
     return render_template("detailed_analysis_partial.html", risk_name=name, detailed_result=detailed_result)
 
 @app.route('/submit_feedback', methods=['POST'])
